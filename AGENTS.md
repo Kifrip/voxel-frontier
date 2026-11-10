@@ -20,7 +20,7 @@
   - `src/storage/` — IndexedDB + `pg:voxel-frontier:` `localStorage` save system (`saveSystem.ts`).
   - `src/ui/` — Main menu, world creator/loader, HUD, inventory/crafting workshop, pause & settings (`uiManager.ts`).
 - **Device Support Exception**: Owner-approved desktop-only (`supportedDevices: ["desktop"]` in `public/game.json`) using Pointer Lock keyboard and mouse controls.
-- **Commands**: `npm run dev`, `npm test`, `npm run build`, `npm run test:e2e`, `node scripts/platform/smoke.mjs`.
+- **Commands**: `npm run dev`, `npm test`, `npm run build`, `npm run test:e2e`, `npx --yes github:procrastinate-games/game-publisher#v1` (game.json check).
 
 ## Platform publishing contract
 
