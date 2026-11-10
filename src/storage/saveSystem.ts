@@ -60,8 +60,10 @@ export const DEFAULT_SETTINGS: GameSettings = {
 const DB_NAME = 'VoxelFrontierDB';
 const DB_VERSION = 1;
 const STORE_WORLDS = 'worlds';
-const LS_FALLBACK_KEY = 'voxel_frontier_worlds_v1';
-const LS_SETTINGS_KEY = 'voxel_frontier_settings_v1';
+const LS_FALLBACK_KEY = 'pg:voxel-frontier:worlds';
+const LS_SETTINGS_KEY = 'pg:voxel-frontier:settings';
+const LEGACY_LS_WORLDS_KEY = 'voxel_frontier_worlds_v1';
+const LEGACY_LS_SETTINGS_KEY = 'voxel_frontier_settings_v1';
 
 export class SaveSystem {
   private dbPromise: Promise<IDBDatabase | null> | null = null;
@@ -200,7 +202,8 @@ export class SaveSystem {
   private readLocalMirror(): Record<string, WorldSaveData> {
     if (typeof localStorage === 'undefined') return {};
     try {
-      const raw = localStorage.getItem(LS_FALLBACK_KEY);
+      const raw =
+        localStorage.getItem(LS_FALLBACK_KEY) ?? localStorage.getItem(LEGACY_LS_WORLDS_KEY);
       if (!raw) return {};
       return JSON.parse(raw) as Record<string, WorldSaveData>;
     } catch {
@@ -211,7 +214,8 @@ export class SaveSystem {
   public loadSettings(): GameSettings {
     if (typeof localStorage === 'undefined') return { ...DEFAULT_SETTINGS };
     try {
-      const raw = localStorage.getItem(LS_SETTINGS_KEY);
+      const raw =
+        localStorage.getItem(LS_SETTINGS_KEY) ?? localStorage.getItem(LEGACY_LS_SETTINGS_KEY);
       if (!raw) return { ...DEFAULT_SETTINGS };
       return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
     } catch {

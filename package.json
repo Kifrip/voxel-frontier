@@ -4,22 +4,28 @@
   "description": "Voxel Frontier — A Browser-Based 3D Voxel Sandbox Game",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:e2e": "node tests/e2e.mjs"
+    "test": "node --test tests/manifest.test.js && vitest run tests/game.test.ts",
+    "test:e2e": "node tests/e2e.mjs",
+    "smoke": "node scripts/platform/smoke.mjs"
   },
   "dependencies": {
     "three": "^0.170.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.2",
     "@types/three": "^0.170.0",
     "fake-indexeddb": "^6.0.0",
     "playwright-core": "^1.48.2",
     "typescript": "^5.6.3",
     "vite": "^6.0.1",
-    "vitest": "^2.1.5"
+    "vitest": "^2.1.5",
+    "wrangler": "4.159.0"
   }
 }

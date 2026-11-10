@@ -1,6 +1,9 @@
-node_modules
-dist
-.DS_Store
-*.local
-test-results
-playwright-report
+node_modules/
+dist/
+.wrangler/
+.env*
+.dev.vars*
+playwright-report/
+test-results/
+.agents/
+.vite/

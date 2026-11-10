@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "slug": "voxel-frontier",
+  "status": "published",
+  "title": "Voxel Frontier",
+  "shortDescription": "Explore a procedural 3D voxel wilderness, mine ores, craft tools, and build shelters.",
+  "description": "Voxel Frontier is a single-player 3D voxel sandbox adventure across four distinct biomes: Emerald Plains, Timberland Forest, Cragspire Mountains, and Sunbaked Desert. Mine blocks, smelt ores, craft progressive tools, construct illuminated shelters, and save your worlds locally.",
+  "primaryCategory": "Adventure",
+  "categories": [
+    "Adventure",
+    "Sandbox",
+    "Survival"
+  ],
+  "dimension": "3D",
+  "controls": [
+    "WASD / Arrow Keys to move, Space to jump (double-tap in Creative to fly), Left Shift to sprint.",
+    "Mouse to look (Pointer Lock), Left-Click to mine or attack, Right-Click to place blocks, 1-9 / Scroll to select hotbar, E for inventory, C for crafting, Esc to pause."
+  ],
+  "languages": "English",
+  "saveNote": "Worlds, block modifications, inventory, time of day, and settings are saved locally in IndexedDB and localStorage (pg:voxel-frontier:).",
+  "coverAlt": "Voxel Frontier 3D procedural landscape with green grasslands, oak and pine trees, mountains, and voxel blocks.",
+  "accent": "lime",
+  "startQuery": "",
+  "featured": false,
+  "showSource": false,
+  "supportedDevices": [
+    "desktop"
+  ]
+}
