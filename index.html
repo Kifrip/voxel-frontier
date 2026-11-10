@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voxel Frontier — 3D Voxel Sandbox Game</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><polygon points='32,6 58,19 32,32 6,19' fill='%235ca842'/><polygon points='6,19 32,32 32,58 6,45' fill='%23855a3b'/><polygon points='32,32 58,19 58,45 32,58' fill='%2363422a'/></svg>" />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- WebGL Canvas Container -->
+      <div id="canvas-container"></div>
+
+      <!-- Damage Vignette Flash -->
+      <div id="damage-overlay" class="hidden"></div>
+      <!-- Underwater Tint Overlay -->
+      <div id="underwater-overlay" class="hidden"></div>
+
+      <!-- In-Game HUD -->
+      <div id="hud" class="hidden">
+        <!-- Top-Left World & Biome Status Pill -->
+        <div id="hud-top-left" class="hud-card">
+          <div class="hud-world-row">
+            <span id="hud-world-name" class="hud-title">Frontier World</span>
+            <span id="hud-mode-badge" class="mode-badge survival">SURVIVAL</span>
+            <span id="hud-fly-badge" class="mode-badge fly hidden">FLYING</span>
+          </div>
+          <div class="hud-meta-row">
+            <span id="hud-biome">Emerald Plains</span>
+            <span class="dot-sep">•</span>
+            <span id="hud-time">Daytime</span>
+            <span class="dot-sep">•</span>
+            <span id="hud-coords">X: 0 Y: 0 Z: 0</span>
+          </div>
+        </div>
+
+        <!-- Top-Right Contextual Tutorial & Quick Keys -->
+        <div id="hud-top-right">
+          <div id="tutorial-card" class="hud-card">
+            <div class="tutorial-header">
+              <span class="tutorial-tag">FRONTIER GUIDE</span>
+              <span id="tutorial-step-count">1 / 5</span>
+            </div>
+            <div id="tutorial-text" class="tutorial-body">
+              Explore the area and hold <b>Left-Click</b> on a tree trunk to gather <b>Oak Logs</b>.
+            </div>
+          </div>
+          <div class="hud-shortcuts-bar">
+            <span><kbd>E</kbd> Inventory</span>
+            <span><kbd>C</kbd> Craft</span>
+            <span><kbd>F3</kbd> Debug</span>
+            <span><kbd>Esc</kbd> Pause</span>
+          </div>
+        </div>
+
+        <!-- F3 Debug Panel -->
+        <div id="debug-overlay" class="hud-card hidden"></div>
+
+        <!-- Center Crosshair -->
+        <div id="crosshair">
+          <div class="ch-line ch-h"></div>
+          <div class="ch-line ch-v"></div>
+          <div class="ch-dot"></div>
+        </div>
+
+        <!-- Target Block Indicator & Mining Progress Bar -->
+        <div id="target-indicator" class="hidden">
+          <div id="target-block-name">Grass Block</div>
+          <div id="target-tool-hint" class="target-sub"></div>
+          <div id="mining-bar-wrap" class="hidden">
+            <div id="mining-bar-fill"></div>
+          </div>
+        </div>
+
+        <!-- Toast Notifications Container -->
+        <div id="toast-container"></div>
+
+        <!-- Bottom HUD: Health, Selected Item Name, 9-Slot Hotbar -->
+        <div id="hud-bottom">
+          <div id="health-bar"></div>
+          <div id="selected-item-banner">Empty Hand</div>
+          <div id="hotbar"></div>
+        </div>
+      </div>
+
+      <!-- Main Menu Screen -->
+      <div id="main-menu" class="menu-overlay">
+        <div class="menu-panel main-menu-panel">
+          <div class="brand-emblem">
+            <svg viewBox="0 0 64 64" width="58" height="58">
+              <polygon points="32,6 58,19 32,32 6,19" fill="#63b846" />
+              <polygon points="6,19 32,32 32,58 6,45" fill="#8b5e3c" />
+              <polygon points="32,32 58,19 58,45 32,58" fill="#69452a" />
+            </svg>
+          </div>
+          <h1 class="game-title">VOXEL FRONTIER</h1>
+          <p class="game-subtitle">A Procedural 3D Wilderness Sandbox Adventure</p>
+
+          <div class="menu-btn-stack">
+            <button id="btn-quick-play" class="btn btn-primary btn-lg">
+              Play World
+            </button>
+            <button id="btn-open-create" class="btn btn-secondary">
+              Create New World
+            </button>
+            <button id="btn-open-load" class="btn btn-secondary">
+              Load Saved World
+            </button>
+            <div class="menu-row-2">
+              <button id="btn-open-settings-main" class="btn btn-ghost">
+                Settings
+              </button>
+              <button id="btn-open-controls-main" class="btn btn-ghost">
+                Controls
+              </button>
+            </div>
+          </div>
+
+          <div class="menu-footer">
+            <span>Desktop WebGL • Deterministic Seeds • Local IndexedDB Persistence</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Create World Modal -->
+      <div id="create-world-modal" class="menu-overlay hidden">
+        <div class="menu-panel modal-panel">
+          <div class="modal-header">
+            <h2>Create New World</h2>
+            <button id="btn-close-create" class="btn-icon" aria-label="Close">✕</button>
+          </div>
+          <div class="form-group">
+            <label for="input-world-name">World Name</label>
+            <input
+              id="input-world-name"
+              type="text"
+              maxlength="32"
+              value="Emerald Frontier"
+              placeholder="Enter world name..."
+            />
+          </div>
+          <div class="form-group">
+            <label for="input-world-seed">World Seed (Optional — same seed generates identical terrain)</label>
+            <div class="input-with-btn">
+              <input
+                id="input-world-seed"
+                type="text"
+                maxlength="36"
+                value="VoxelFrontier2026"
+                placeholder="Numeric or text seed..."
+              />
+              <button id="btn-random-seed" type="button" class="btn btn-ghost btn-sm">
+                Randomize
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Game Mode</label>
+            <div class="mode-selector">
+              <button id="btn-mode-survival" type="button" class="mode-option active" data-mode="survival">
+                <div class="mode-opt-title">Survival Mode</div>
+                <div class="mode-opt-desc">Gather resources, craft tools, manage health, and build your shelter.</div>
+              </button>
+              <button id="btn-mode-creative" type="button" class="mode-option" data-mode="creative">
+                <div class="mode-opt-title">Creative Mode</div>
+                <div class="mode-opt-desc">Unlimited blocks, instant mining, double-tap Space to fly freely.</div>
+              </button>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button id="btn-cancel-create" class="btn btn-ghost">Back</button>
+            <button id="btn-confirm-create" class="btn btn-primary">Create &amp; Launch World</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Load World Modal -->
+      <div id="load-world-modal" class="menu-overlay hidden">
+        <div class="menu-panel modal-panel modal-wide">
+          <div class="modal-header">
+            <h2>Saved Worlds</h2>
+            <button id="btn-close-load" class="btn-icon" aria-label="Close">✕</button>
+          </div>
+          <div id="saved-worlds-list" class="saved-worlds-list"></div>
+          <div class="modal-actions">
+            <button id="btn-back-load" class="btn btn-ghost">Back to Main Menu</button>
+            <button id="btn-new-from-load" class="btn btn-primary">+ Create New World</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory & Crafting Modal (E / C) -->
+      <div id="inventory-modal" class="menu-overlay hidden">
+        <div class="menu-panel workshop-panel">
+          <div class="workshop-header">
+            <div class="workshop-tabs">
+              <button id="tab-btn-inventory" class="tab-btn active">
+                Inventory &amp; Backpack <kbd>E</kbd>
+              </button>
+              <button id="tab-btn-crafting" class="tab-btn">
+                Crafting Workshop <kbd>C</kbd>
+              </button>
+            </div>
+            <button id="btn-close-inventory" class="btn-icon" aria-label="Close">✕</button>
+          </div>
+
+          <!-- Inventory View -->
+          <div id="view-inventory" class="workshop-body">
+            <div class="inv-instructions">
+              <span><b>Left-Click</b> slot to select, move, merge, or swap</span>
+              <span>•</span>
+              <span><b>Right-Click</b> stack to split in half</span>
+              <span>•</span>
+              <span><b>Drag &amp; Drop</b> supported</span>
+            </div>
+
+            <div class="inv-section-label">Backpack Storage (27 Slots)</div>
+            <div id="backpack-grid" class="slot-grid"></div>
+
+            <div class="inv-section-label">Active Hotbar (Slots 1–9)</div>
+            <div id="modal-hotbar-grid" class="slot-grid hotbar-modal-grid"></div>
+
+            <!-- Creative Catalog (Shown in Creative Mode) -->
+            <div id="creative-catalog-section" class="hidden">
+              <div class="inv-section-label">Creative Mode Block &amp; Tool Palette (Click to add to Hotbar)</div>
+              <div id="creative-catalog-grid" class="slot-grid creative-grid"></div>
+            </div>
+
+            <!-- Item Details Footer -->
+            <div id="item-detail-bar" class="item-detail-bar">
+              Hover or select an item slot to inspect its properties.
+            </div>
+          </div>
+
+          <!-- Crafting View -->
+          <div id="view-crafting" class="workshop-body hidden">
+            <div class="crafting-filter-bar">
+              <button class="filter-chip active" data-filter="all">All Recipes</button>
+              <button class="filter-chip" data-filter="craftable">Craftable Now</button>
+              <button class="filter-chip" data-filter="basics">Basics</button>
+              <button class="filter-chip" data-filter="tools">Tools &amp; Weapons</button>
+              <button class="filter-chip" data-filter="building">Building &amp; Smelting</button>
+            </div>
+            <div id="recipes-list" class="recipes-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pause Menu Modal (Esc) -->
+      <div id="pause-modal" class="menu-overlay hidden">
+        <div class="menu-panel pause-panel">
+          <h2>Game Paused</h2>
+          <p id="pause-world-summary" class="pause-sub">Emerald Frontier</p>
+          <div class="menu-btn-stack">
+            <button id="btn-resume-game" class="btn btn-primary btn-lg">Resume Game</button>
+            <button id="btn-save-game" class="btn btn-secondary">Save World Now</button>
+            <button id="btn-toggle-gamemode" class="btn btn-secondary">Switch Mode: Survival / Creative</button>
+            <div class="menu-row-2">
+              <button id="btn-open-settings-pause" class="btn btn-ghost">Settings</button>
+              <button id="btn-open-controls-pause" class="btn btn-ghost">Controls</button>
+            </div>
+            <button id="btn-exit-main-menu" class="btn btn-danger">Save &amp; Exit to Main Menu</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Modal -->
+      <div id="settings-modal" class="menu-overlay hidden">
+        <div class="menu-panel modal-panel">
+          <div class="modal-header">
+            <h2>Settings</h2>
+            <button id="btn-close-settings" class="btn-icon" aria-label="Close">✕</button>
+          </div>
+
+          <div class="settings-grid">
+            <div class="setting-row">
+              <label for="setting-sensitivity">Mouse Sensitivity: <span id="val-sensitivity">1.0</span></label>
+              <input id="setting-sensitivity" type="range" min="0.2" max="2.5" step="0.1" value="1.0" />
+            </div>
+
+            <div class="setting-row">
+              <label for="setting-fov">Field of View (FOV): <span id="val-fov">75°</span></label>
+              <input id="setting-fov" type="range" min="60" max="105" step="1" value="75" />
+            </div>
+
+            <div class="setting-row">
+              <label for="setting-render-dist">Render Distance: <span id="val-render-dist">4 Chunks</span></label>
+              <input id="setting-render-dist" type="range" min="2" max="7" step="1" value="4" />
+            </div>
+
+            <div class="setting-row">
+              <label for="setting-master-vol">Master Volume: <span id="val-master-vol">80%</span></label>
+              <input id="setting-master-vol" type="range" min="0" max="100" step="5" value="80" />
+            </div>
+
+            <div class="setting-row">
+              <label for="setting-sfx-vol">Sound Effects Volume: <span id="val-sfx-vol">85%</span></label>
+              <input id="setting-sfx-vol" type="range" min="0" max="100" step="5" value="85" />
+            </div>
+
+            <div class="setting-row setting-inline">
+              <label for="setting-mute">Mute All Audio</label>
+              <input id="setting-mute" type="checkbox" />
+            </div>
+
+            <div class="setting-row setting-inline">
+              <label for="setting-graphics">Graphics Quality</label>
+              <select id="setting-graphics">
+                <option value="low">Low (Performance)</option>
+                <option value="medium">Medium</option>
+                <option value="high" selected>High</option>
+              </select>
+            </div>
+
+            <div class="setting-row setting-inline">
+              <label for="setting-shadows">Dynamic Shadows</label>
+              <select id="setting-shadows">
+                <option value="off">Off</option>
+                <option value="low" selected>Soft (1024px)</option>
+                <option value="high">Crisp (2048px)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button id="btn-save-settings" class="btn btn-primary">Apply &amp; Close</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls Reference Modal -->
+      <div id="controls-modal" class="menu-overlay hidden">
+        <div class="menu-panel modal-panel">
+          <div class="modal-header">
+            <h2>Controls &amp; Gameplay Guide</h2>
+            <button id="btn-close-controls" class="btn-icon" aria-label="Close">✕</button>
+          </div>
+          <div class="controls-table">
+            <div class="ctrl-row"><span>Move</span><kbd>W A S D</kbd></div>
+            <div class="ctrl-row"><span>Look Around</span><kbd>Mouse</kbd></div>
+            <div class="ctrl-row"><span>Jump / Swim Up</span><kbd>Space</kbd></div>
+            <div class="ctrl-row"><span>Sprint</span><kbd>Left Shift</kbd></div>
+            <div class="ctrl-row"><span>Mine / Break Block / Attack</span><kbd>Left Click (Hold)</kbd></div>
+            <div class="ctrl-row"><span>Place Selected Block</span><kbd>Right Click</kbd></div>
+            <div class="ctrl-row"><span>Open Inventory</span><kbd>E</kbd></div>
+            <div class="ctrl-row"><span>Open Crafting Menu</span><kbd>C</kbd></div>
+            <div class="ctrl-row"><span>Select Hotbar Slot</span><kbd>1 – 9</kbd> or <kbd>Scroll Wheel</kbd></div>
+            <div class="ctrl-row"><span>Toggle Creative Flight</span><kbd>Double-Tap Space</kbd> or <kbd>F</kbd></div>
+            <div class="ctrl-row"><span>Toggle Debug Info</span><kbd>F3</kbd></div>
+            <div class="ctrl-row"><span>Pause / Release Cursor</span><kbd>Esc</kbd></div>
+          </div>
+          <div class="modal-actions">
+            <button id="btn-done-controls" class="btn btn-primary">Got It</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
